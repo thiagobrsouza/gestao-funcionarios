@@ -1,0 +1,16 @@
+node_modules
+.next
+.git
+.claude
+
+# banco local de desenvolvimento
+dev.db
+dev.db-journal
+
+# segredos/env — nunca vão para dentro da imagem
+.env
+.env.*
+!.env.example
+
+npm-debug.log*
+*.log

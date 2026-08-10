@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String   @map("password_hash")
+  criadoEm     DateTime @default(now()) @map("criado_em")
+
+  @@map("users")
+}
+
+model Departamento {
+  id        Int      @id @default(autoincrement())
+  nome      String   @unique
+  criadoEm  DateTime @default(now()) @map("criado_em")
+  cargos    Cargo[]
+
+  @@map("departamentos")
+}
+
+model Cargo {
+  id             Int          @id @default(autoincrement())
+  nome           String       @unique
+  criadoEm       DateTime     @default(now()) @map("criado_em")
+  departamentoId Int          @map("departamento_id")
+  departamento   Departamento @relation(fields: [departamentoId], references: [id])
+  funcionarios   Funcionario[]
+
+  @@map("cargos")
+}
+
+model Funcionario {
+  id           Int      @id @default(autoincrement())
+  nome         String
+  cpf          String   @unique
+  salario      Decimal
+  dataAdmissao DateTime @map("data_admissao")
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  cargoId      Int      @map("cargo_id")
+  cargo        Cargo    @relation(fields: [cargoId], references: [id])
+
+  @@map("funcionarios")
+}
