@@ -2,36 +2,20 @@
 
 import { useActionState, useState } from "react";
 import Modal from "@/components/Modal";
-import { maskCPF } from "@/lib/format";
 import type { ActionState } from "./actions";
 
 const initialState: ActionState = {};
 
-function toDateInputValue(date?: Date) {
-  if (!date) return "";
-  return date.toISOString().slice(0, 10);
-}
-
-export default function FuncionarioModal({
+export default function UsuarioModal({
   mode,
-  funcionario,
-  cargos,
+  usuario,
   action,
 }: {
   mode: "create" | "edit";
-  funcionario?: {
-    id: number;
-    nome: string;
-    cpf: string;
-    salario: string | number;
-    dataAdmissao: Date;
-    cargoId: number;
-  };
-  cargos: { id: number; nome: string }[];
+  usuario?: { id: number; username: string; role: string };
   action: (prevState: ActionState, formData: FormData) => Promise<ActionState>;
 }) {
   const [open, setOpen] = useState(false);
-  const [cpf, setCpf] = useState("");
   const [state, formAction, isPending] = useActionState(action, initialState);
   const [handledState, setHandledState] = useState(state);
 
@@ -40,23 +24,18 @@ export default function FuncionarioModal({
     if (state.success) setOpen(false);
   }
 
-  function openModal() {
-    setCpf(funcionario?.cpf ? maskCPF(funcionario.cpf) : "");
-    setOpen(true);
-  }
-
   return (
     <>
       {mode === "create" ? (
         <button
-          onClick={openModal}
+          onClick={() => setOpen(true)}
           className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700"
         >
           Novo
         </button>
       ) : (
         <button
-          onClick={openModal}
+          onClick={() => setOpen(true)}
           className="text-blue-600 hover:underline text-sm"
         >
           Editar
@@ -66,16 +45,16 @@ export default function FuncionarioModal({
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title={mode === "create" ? "Novo Funcionário" : "Editar Funcionário"}
+        title={mode === "create" ? "Novo Usuário" : "Editar Usuário"}
       >
         <form action={formAction} className="flex flex-col gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nome
+              Usuário
             </label>
             <input
-              name="nome"
-              defaultValue={funcionario?.nome}
+              name="username"
+              defaultValue={usuario?.username}
               required
               className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
             />
@@ -83,67 +62,42 @@ export default function FuncionarioModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              CPF
-            </label>
-            <input
-              name="cpf"
-              value={cpf}
-              onChange={(e) => setCpf(maskCPF(e.target.value))}
-              placeholder="000.000.000-00"
-              inputMode="numeric"
-              maxLength={14}
-              required
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Salário (R$)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              name="salario"
-              defaultValue={funcionario?.salario?.toString()}
-              required
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Data de admissão
-            </label>
-            <input
-              type="date"
-              name="dataAdmissao"
-              defaultValue={toDateInputValue(funcionario?.dataAdmissao)}
-              required
-              className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Cargo
+              Papel
             </label>
             <select
-              name="cargoId"
-              defaultValue={funcionario?.cargoId ?? ""}
+              name="role"
+              defaultValue={usuario?.role ?? "user"}
               required
               className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white"
             >
-              <option value="" disabled>
-                Selecione um cargo
-              </option>
-              {cargos.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nome}
-                </option>
-              ))}
+              <option value="user">Usuário</option>
+              <option value="admin">Administrador</option>
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {mode === "create" ? "Senha" : "Nova senha"}
+            </label>
+            <input
+              type="password"
+              name={mode === "create" ? "password" : "novaSenha"}
+              required={mode === "create"}
+              placeholder={mode === "edit" ? "Deixe em branco para manter a atual" : undefined}
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Confirmar senha
+            </label>
+            <input
+              type="password"
+              name="confirmarSenha"
+              required={mode === "create"}
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            />
           </div>
 
           {state.error && (

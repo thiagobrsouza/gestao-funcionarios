@@ -13,10 +13,12 @@ async function main() {
   const password = "4dm!n2026";
   const passwordHash = await bcrypt.hash(password, 10);
 
+  // "update: {}" garante que o usuário exista sem sobrescrever a senha
+  // em restarts futuros do container (ex.: depois que o admin a trocar).
   await prisma.user.upsert({
     where: { username },
-    update: { passwordHash },
-    create: { username, passwordHash },
+    update: {},
+    create: { username, passwordHash, role: "admin" },
   });
 
   console.log(`Usuário "${username}" pronto.`);

@@ -16,12 +16,17 @@ export default function Navbar() {
 
   if (pathname === "/login") return null;
 
+  const isAdmin = session?.user?.role === "admin";
+  const visibleLinks = isAdmin
+    ? [...links, { href: "/usuarios", label: "Usuários" }]
+    : links;
+
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
       <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-8">
         <span className="font-bold text-gray-900">Gestão de Funcionários</span>
         <div className="flex gap-6">
-          {links.map((link) => {
+          {visibleLinks.map((link) => {
             const active = pathname.startsWith(link.href);
             return (
               <Link
@@ -40,10 +45,17 @@ export default function Navbar() {
         </div>
         <div className="ml-auto flex items-center gap-4">
           {session?.user?.name && (
-            <span className="text-sm text-gray-500">{session.user.name}</span>
+            <Link
+              href="/conta"
+              className="text-sm text-gray-500 hover:text-blue-600"
+            >
+              {session.user.name}
+            </Link>
           )}
           <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
+            onClick={() =>
+              signOut({ callbackUrl: `${window.location.origin}/login` })
+            }
             className="text-sm text-red-600 hover:underline"
           >
             Sair

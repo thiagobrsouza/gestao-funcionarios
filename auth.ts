@@ -24,8 +24,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const valid = await bcrypt.compare(password, user.passwordHash);
         if (!valid) return null;
 
-        return { id: String(user.id), name: user.username };
+        return { id: String(user.id), name: user.username, role: user.role };
       },
     }),
   ],
+  callbacks: {
+    ...authConfig.callbacks,
+    jwt({ token, user }) {
+      if (user) {
+        token.id = user.id as string;
+        token.role = user.role;
+      }
+      return token;
+    },
+    session({ session, token }) {
+      session.user.id = token.id;
+      session.user.role = token.role;
+      return session;
+    },
+  },
 });
