@@ -18,6 +18,15 @@ export function formatDateOnly(value: Date | string) {
   return new Intl.DateTimeFormat("pt-BR", { timeZone: "UTC" }).format(date);
 }
 
+export function formatTime(value: Date | string) {
+  const date = typeof value === "string" ? new Date(value) : value;
+  return new Intl.DateTimeFormat("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(date);
+}
+
 export function formatCPF(value: string) {
   const digits = value.replace(/\D/g, "");
   return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");

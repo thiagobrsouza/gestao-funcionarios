@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { logAction } from "@/lib/log";
 
 export type ActionState = { error?: string; success?: boolean };
 
@@ -34,7 +35,7 @@ export async function createUser(
   _prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  await requireAdmin();
+  const session = await requireAdmin();
 
   const username = formData.get("username")?.toString().trim();
   const password = formData.get("password")?.toString();
@@ -61,6 +62,7 @@ export async function createUser(
     throw err;
   }
 
+  await logAction(session.user.name ?? "desconhecido", `Criou o usuário "${username}"`);
   revalidatePath("/usuarios");
   return { success: true };
 }
@@ -109,6 +111,7 @@ export async function updateUser(
     throw err;
   }
 
+  await logAction(session.user.name ?? "desconhecido", `Atualizou o usuário "${username}"`);
   revalidatePath("/usuarios");
   return { success: true };
 }
@@ -120,6 +123,13 @@ export async function deleteUser(id: number) {
     throw new Error("Você não pode excluir sua própria conta.");
   }
 
+  const target = await prisma.user.findUnique({ where: { id } });
+
   await prisma.user.delete({ where: { id } });
+
+  await logAction(
+    session.user.name ?? "desconhecido",
+    `Excluiu o usuário "${target?.username ?? id}"`
+  );
   revalidatePath("/usuarios");
 }

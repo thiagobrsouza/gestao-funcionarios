@@ -3,6 +3,7 @@
 import bcrypt from "bcryptjs";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { logAction } from "@/lib/log";
 
 export type ActionState = { error?: string; success?: boolean };
 
@@ -36,5 +37,6 @@ export async function changeOwnPassword(
   const passwordHash = await bcrypt.hash(novaSenha, 10);
   await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
 
+  await logAction(user.username, "Alterou a própria senha");
   return { success: true };
 }

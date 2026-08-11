@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { logAction } from "@/lib/log";
 import { authConfig } from "./auth.config";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -41,6 +42,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.user.id = token.id;
       session.user.role = token.role;
       return session;
+    },
+  },
+  events: {
+    async signIn({ user }) {
+      if (user.name) await logAction(user.name, "Login realizado");
+    },
+    async signOut(message) {
+      const username = "token" in message ? message.token?.name : undefined;
+      if (username) await logAction(username, "Logout realizado");
     },
   },
 });

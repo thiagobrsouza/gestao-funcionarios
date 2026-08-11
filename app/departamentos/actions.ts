@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/auth";
+import { logAction } from "@/lib/log";
 
 export type ActionState = { error?: string; success?: boolean };
 
@@ -12,6 +14,11 @@ function isUniqueConstraintError(err: unknown) {
     "code" in err &&
     (err as { code: unknown }).code === "P2002"
   );
+}
+
+async function currentUsername() {
+  const session = await auth();
+  return session?.user?.name ?? "desconhecido";
 }
 
 export async function createDepartamento(
@@ -30,6 +37,7 @@ export async function createDepartamento(
     throw err;
   }
 
+  await logAction(await currentUsername(), `Criou o departamento "${nome}"`);
   revalidatePath("/departamentos");
   return { success: true };
 }
@@ -51,11 +59,14 @@ export async function updateDepartamento(
     throw err;
   }
 
+  await logAction(await currentUsername(), `Atualizou o departamento "${nome}"`);
   revalidatePath("/departamentos");
   return { success: true };
 }
 
 export async function deleteDepartamento(id: number) {
+  const departamento = await prisma.departamento.findUnique({ where: { id } });
+
   try {
     await prisma.departamento.delete({ where: { id } });
   } catch (err) {
@@ -72,5 +83,9 @@ export async function deleteDepartamento(id: number) {
     throw err;
   }
 
+  await logAction(
+    await currentUsername(),
+    `Excluiu o departamento "${departamento?.nome ?? id}"`
+  );
   revalidatePath("/departamentos");
 }

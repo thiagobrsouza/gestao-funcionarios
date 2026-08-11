@@ -18,7 +18,11 @@ export default function Navbar() {
 
   const isAdmin = session?.user?.role === "admin";
   const visibleLinks = isAdmin
-    ? [...links, { href: "/usuarios", label: "Usuários" }]
+    ? [
+        ...links,
+        { href: "/usuarios", label: "Usuários" },
+        { href: "/logs", label: "Logs" },
+      ]
     : links;
 
   return (
