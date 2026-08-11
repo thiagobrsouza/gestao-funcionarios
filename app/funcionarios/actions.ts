@@ -28,6 +28,7 @@ function parseInput(formData: FormData) {
   const salarioRaw = formData.get("salario")?.toString();
   const salario = salarioRaw ? Number(salarioRaw) : NaN;
   const dataAdmissaoRaw = formData.get("dataAdmissao")?.toString();
+  const dataDesligamentoRaw = formData.get("dataDesligamento")?.toString();
   const cargoIdRaw = formData.get("cargoId")?.toString();
   const cargoId = cargoIdRaw ? Number(cargoIdRaw) : NaN;
 
@@ -39,11 +40,19 @@ function parseInput(formData: FormData) {
   if (!dataAdmissaoRaw) return { error: "Data de admissão é obrigatória." };
   if (!cargoIdRaw || Number.isNaN(cargoId)) return { error: "Cargo é obrigatório." };
 
+  const dataAdmissao = new Date(dataAdmissaoRaw);
+  const dataDesligamento = dataDesligamentoRaw ? new Date(dataDesligamentoRaw) : null;
+
+  if (dataDesligamento && dataDesligamento < dataAdmissao) {
+    return { error: "A data de desligamento não pode ser anterior à admissão." };
+  }
+
   return {
     nome,
     cpf,
     salario,
-    dataAdmissao: new Date(dataAdmissaoRaw),
+    dataAdmissao,
+    dataDesligamento,
     cargoId,
   };
 }
@@ -62,6 +71,7 @@ export async function createFuncionario(
         cpf: parsed.cpf!,
         salario: parsed.salario!,
         dataAdmissao: parsed.dataAdmissao!,
+        dataDesligamento: parsed.dataDesligamento ?? null,
         cargoId: parsed.cargoId!,
       },
     });
@@ -93,6 +103,7 @@ export async function updateFuncionario(
         cpf: parsed.cpf!,
         salario: parsed.salario!,
         dataAdmissao: parsed.dataAdmissao!,
+        dataDesligamento: parsed.dataDesligamento ?? null,
         cargoId: parsed.cargoId!,
       },
     });

@@ -1,22 +1,27 @@
 import { prisma } from "@/lib/prisma";
 import { PAGE_SIZE, parsePage } from "@/lib/pagination";
+import { parseSort } from "@/lib/sorting";
 import { formatDate } from "@/lib/format";
 import Pagination from "@/components/Pagination";
+import SortableHeader from "@/components/SortableHeader";
 import DeleteButton from "@/components/DeleteButton";
 import DepartamentoModal from "./DepartamentoModal";
 import { createDepartamento, updateDepartamento, deleteDepartamento } from "./actions";
 
+const SORTABLE_FIELDS = ["id", "nome", "criadoEm"] as const;
+
 export default async function DepartamentosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; sort?: string; dir?: string }>;
 }) {
-  const { page: pageParam } = await searchParams;
+  const { page: pageParam, sort: sortParam, dir: dirParam } = await searchParams;
   const page = parsePage(pageParam);
+  const { field: sort, dir } = parseSort(sortParam, dirParam, SORTABLE_FIELDS, "id");
 
   const [items, total] = await Promise.all([
     prisma.departamento.findMany({
-      orderBy: { id: "asc" },
+      orderBy: { [sort]: dir },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
     }),
@@ -35,9 +40,15 @@ export default async function DepartamentosPage({
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-left text-gray-600">
             <tr>
-              <th className="px-4 py-3">ID</th>
-              <th className="px-4 py-3">Nome</th>
-              <th className="px-4 py-3">Criado em</th>
+              <th className="px-4 py-3">
+                <SortableHeader label="ID" field="id" currentField={sort} currentDir={dir} basePath="/departamentos" />
+              </th>
+              <th className="px-4 py-3">
+                <SortableHeader label="Nome" field="nome" currentField={sort} currentDir={dir} basePath="/departamentos" />
+              </th>
+              <th className="px-4 py-3">
+                <SortableHeader label="Criado em" field="criadoEm" currentField={sort} currentDir={dir} basePath="/departamentos" />
+              </th>
               <th className="px-4 py-3 text-right">Ações</th>
             </tr>
           </thead>
@@ -74,7 +85,12 @@ export default async function DepartamentosPage({
         </table>
       </div>
 
-      <Pagination page={page} totalPages={totalPages} basePath="/departamentos" />
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        basePath="/departamentos"
+        extraParams={{ sort, dir }}
+      />
     </div>
   );
 }

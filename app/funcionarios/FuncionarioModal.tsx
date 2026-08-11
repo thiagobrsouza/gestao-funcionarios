@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import Modal from "@/components/Modal";
+import { EditIcon } from "@/components/icons";
 import { maskCPF } from "@/lib/format";
 import type { ActionState } from "./actions";
 
@@ -25,6 +26,7 @@ export default function FuncionarioModal({
     cpf: string;
     salario: string | number;
     dataAdmissao: Date;
+    dataDesligamento: Date | null;
     cargoId: number;
   };
   cargos: { id: number; nome: string }[];
@@ -57,9 +59,11 @@ export default function FuncionarioModal({
       ) : (
         <button
           onClick={openModal}
-          className="text-blue-600 hover:underline text-sm"
+          aria-label="Editar"
+          title="Editar"
+          className="text-blue-600 hover:text-blue-800"
         >
-          Editar
+          <EditIcon className="w-5 h-5" />
         </button>
       )}
 
@@ -123,6 +127,21 @@ export default function FuncionarioModal({
               required
               className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Desligamento
+            </label>
+            <input
+              type="date"
+              name="dataDesligamento"
+              defaultValue={toDateInputValue(funcionario?.dataDesligamento ?? undefined)}
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Deixe em branco se o funcionário ainda está ativo.
+            </p>
           </div>
 
           <div>

@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import Modal from "@/components/Modal";
+import { EditIcon } from "@/components/icons";
 import type { ActionState } from "./actions";
 
 const initialState: ActionState = {};
@@ -36,9 +37,11 @@ export default function UsuarioModal({
       ) : (
         <button
           onClick={() => setOpen(true)}
-          className="text-blue-600 hover:underline text-sm"
+          aria-label="Editar"
+          title="Editar"
+          className="text-blue-600 hover:text-blue-800"
         >
-          Editar
+          <EditIcon className="w-5 h-5" />
         </button>
       )}
 

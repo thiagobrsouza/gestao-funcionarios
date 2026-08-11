@@ -1,23 +1,31 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { PAGE_SIZE, parsePage } from "@/lib/pagination";
+import { parseSort } from "@/lib/sorting";
 import { formatDate } from "@/lib/format";
 import Pagination from "@/components/Pagination";
+import SortableHeader from "@/components/SortableHeader";
 import DeleteButton from "@/components/DeleteButton";
 import CargoModal from "./CargoModal";
 import { createCargo, updateCargo, deleteCargo } from "./actions";
 
+const SORTABLE_FIELDS = ["id", "nome", "departamento", "criadoEm"] as const;
+
 export default async function CargosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; sort?: string; dir?: string }>;
 }) {
-  const { page: pageParam } = await searchParams;
+  const { page: pageParam, sort: sortParam, dir: dirParam } = await searchParams;
   const page = parsePage(pageParam);
+  const { field: sort, dir } = parseSort(sortParam, dirParam, SORTABLE_FIELDS, "id");
+
+  const orderBy =
+    sort === "departamento" ? { departamento: { nome: dir } } : { [sort]: dir };
 
   const [items, total, departamentos] = await Promise.all([
     prisma.cargo.findMany({
-      orderBy: { id: "asc" },
+      orderBy,
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
       include: { departamento: true },
@@ -48,10 +56,18 @@ export default async function CargosPage({
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-left text-gray-600">
             <tr>
-              <th className="px-4 py-3">ID</th>
-              <th className="px-4 py-3">Nome</th>
-              <th className="px-4 py-3">Departamento</th>
-              <th className="px-4 py-3">Criado em</th>
+              <th className="px-4 py-3">
+                <SortableHeader label="ID" field="id" currentField={sort} currentDir={dir} basePath="/cargos" />
+              </th>
+              <th className="px-4 py-3">
+                <SortableHeader label="Nome" field="nome" currentField={sort} currentDir={dir} basePath="/cargos" />
+              </th>
+              <th className="px-4 py-3">
+                <SortableHeader label="Departamento" field="departamento" currentField={sort} currentDir={dir} basePath="/cargos" />
+              </th>
+              <th className="px-4 py-3">
+                <SortableHeader label="Criado em" field="criadoEm" currentField={sort} currentDir={dir} basePath="/cargos" />
+              </th>
               <th className="px-4 py-3 text-right">Ações</th>
             </tr>
           </thead>
@@ -90,7 +106,12 @@ export default async function CargosPage({
         </table>
       </div>
 
-      <Pagination page={page} totalPages={totalPages} basePath="/cargos" />
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        basePath="/cargos"
+        extraParams={{ sort, dir }}
+      />
     </div>
   );
 }

@@ -52,14 +52,15 @@ model Log {
 }
 
 model Funcionario {
-  id           Int      @id @default(autoincrement())
-  nome         String
-  cpf          String   @unique
-  salario      Decimal
-  dataAdmissao DateTime @map("data_admissao")
-  criadoEm     DateTime @default(now()) @map("criado_em")
-  cargoId      Int      @map("cargo_id")
-  cargo        Cargo    @relation(fields: [cargoId], references: [id])
+  id                Int       @id @default(autoincrement())
+  nome              String
+  cpf               String    @unique
+  salario           Decimal
+  dataAdmissao      DateTime  @map("data_admissao")
+  dataDesligamento  DateTime? @map("data_desligamento")
+  criadoEm          DateTime  @default(now()) @map("criado_em")
+  cargoId           Int       @map("cargo_id")
+  cargo             Cargo     @relation(fields: [cargoId], references: [id])
 
   @@map("funcionarios")
 }

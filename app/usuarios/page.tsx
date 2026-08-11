@@ -2,8 +2,10 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { PAGE_SIZE, parsePage } from "@/lib/pagination";
+import { parseSort } from "@/lib/sorting";
 import { formatDate } from "@/lib/format";
 import Pagination from "@/components/Pagination";
+import SortableHeader from "@/components/SortableHeader";
 import DeleteButton from "@/components/DeleteButton";
 import UsuarioModal from "./UsuarioModal";
 import { createUser, updateUser, deleteUser } from "./actions";
@@ -13,22 +15,25 @@ const ROLE_LABELS: Record<string, string> = {
   user: "Usuário",
 };
 
+const SORTABLE_FIELDS = ["id", "username", "role", "criadoEm"] as const;
+
 export default async function UsuariosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; sort?: string; dir?: string }>;
 }) {
   const session = await auth();
   if (session?.user?.role !== "admin") {
     redirect("/");
   }
 
-  const { page: pageParam } = await searchParams;
+  const { page: pageParam, sort: sortParam, dir: dirParam } = await searchParams;
   const page = parsePage(pageParam);
+  const { field: sort, dir } = parseSort(sortParam, dirParam, SORTABLE_FIELDS, "id");
 
   const [items, total] = await Promise.all([
     prisma.user.findMany({
-      orderBy: { id: "asc" },
+      orderBy: { [sort]: dir },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
     }),
@@ -47,10 +52,18 @@ export default async function UsuariosPage({
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-left text-gray-600">
             <tr>
-              <th className="px-4 py-3">ID</th>
-              <th className="px-4 py-3">Usuário</th>
-              <th className="px-4 py-3">Papel</th>
-              <th className="px-4 py-3">Criado em</th>
+              <th className="px-4 py-3">
+                <SortableHeader label="ID" field="id" currentField={sort} currentDir={dir} basePath="/usuarios" />
+              </th>
+              <th className="px-4 py-3">
+                <SortableHeader label="Usuário" field="username" currentField={sort} currentDir={dir} basePath="/usuarios" />
+              </th>
+              <th className="px-4 py-3">
+                <SortableHeader label="Papel" field="role" currentField={sort} currentDir={dir} basePath="/usuarios" />
+              </th>
+              <th className="px-4 py-3">
+                <SortableHeader label="Criado em" field="criadoEm" currentField={sort} currentDir={dir} basePath="/usuarios" />
+              </th>
               <th className="px-4 py-3 text-right">Ações</th>
             </tr>
           </thead>
@@ -88,7 +101,12 @@ export default async function UsuariosPage({
         </table>
       </div>
 
-      <Pagination page={page} totalPages={totalPages} basePath="/usuarios" />
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        basePath="/usuarios"
+        extraParams={{ sort, dir }}
+      />
     </div>
   );
 }

@@ -2,25 +2,30 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { PAGE_SIZE, parsePage } from "@/lib/pagination";
+import { parseSort } from "@/lib/sorting";
 import { formatDate, formatTime } from "@/lib/format";
 import Pagination from "@/components/Pagination";
+import SortableHeader from "@/components/SortableHeader";
+
+const SORTABLE_FIELDS = ["criadoEm", "descricao", "usuario"] as const;
 
 export default async function LogsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; sort?: string; dir?: string }>;
 }) {
   const session = await auth();
   if (session?.user?.role !== "admin") {
     redirect("/");
   }
 
-  const { page: pageParam } = await searchParams;
+  const { page: pageParam, sort: sortParam, dir: dirParam } = await searchParams;
   const page = parsePage(pageParam);
+  const { field: sort, dir } = parseSort(sortParam, dirParam, SORTABLE_FIELDS, "criadoEm", "desc");
 
   const [items, total] = await Promise.all([
     prisma.log.findMany({
-      orderBy: { id: "desc" },
+      orderBy: { [sort]: dir },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
     }),
@@ -38,10 +43,18 @@ export default async function LogsPage({
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-left text-gray-600">
             <tr>
-              <th className="px-4 py-3">Data</th>
-              <th className="px-4 py-3">Horário</th>
-              <th className="px-4 py-3">Descrição</th>
-              <th className="px-4 py-3">Usuário</th>
+              <th className="px-4 py-3">
+                <SortableHeader label="Data" field="criadoEm" currentField={sort} currentDir={dir} basePath="/logs" />
+              </th>
+              <th className="px-4 py-3">
+                <SortableHeader label="Horário" field="criadoEm" currentField={sort} currentDir={dir} basePath="/logs" />
+              </th>
+              <th className="px-4 py-3">
+                <SortableHeader label="Descrição" field="descricao" currentField={sort} currentDir={dir} basePath="/logs" />
+              </th>
+              <th className="px-4 py-3">
+                <SortableHeader label="Usuário" field="usuario" currentField={sort} currentDir={dir} basePath="/logs" />
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -64,7 +77,12 @@ export default async function LogsPage({
         </table>
       </div>
 
-      <Pagination page={page} totalPages={totalPages} basePath="/logs" />
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        basePath="/logs"
+        extraParams={{ sort, dir }}
+      />
     </div>
   );
 }

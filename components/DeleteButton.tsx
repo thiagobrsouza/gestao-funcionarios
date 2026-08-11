@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { TrashIcon } from "@/components/icons";
 
 export default function DeleteButton({
   id,
@@ -28,9 +29,11 @@ export default function DeleteButton({
     <button
       onClick={handleClick}
       disabled={isPending}
-      className="text-red-600 hover:underline disabled:opacity-50 text-sm"
+      aria-label="Excluir"
+      title="Excluir"
+      className="text-red-600 hover:text-red-800 disabled:opacity-50"
     >
-      {isPending ? "Excluindo..." : "Excluir"}
+      <TrashIcon className="w-5 h-5" />
     </button>
   );
 }
