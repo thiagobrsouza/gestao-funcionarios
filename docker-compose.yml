@@ -7,8 +7,5 @@ services:
       AUTH_SECRET: ${AUTH_SECRET}
       DATABASE_URL: file:/app/data/dev.db
     volumes:
-      - db-data:/app/data
+      - srv/data/gestao-funcionarios:/app/data
     restart: unless-stopped
-
-volumes:
-  db-data:
